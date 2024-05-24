@@ -4141,21 +4141,21 @@
   </machine>
 
   <machine MACH="cades">
-    <DESC>OR-CONDO, CADES-CCSI, os is Linux, 16 pes/nodes, batch system is PBS</DESC>
+    <DESC>OR-CONDO, CADES-CCSI, os is Linux, 16 pesx2HThreads/nodes, batch system is Slurm</DESC>
     <NODENAME_REGEX>or-condo</NODENAME_REGEX>
     <OS>LINUX</OS>
     <COMPILERS>gnu,intel</COMPILERS>
     <MPILIBS>openmpi</MPILIBS>
-    <CIME_OUTPUT_ROOT>/lustre/or-hydra/cades-ccsi/scratch/$USER</CIME_OUTPUT_ROOT>
-    <DIN_LOC_ROOT>/nfs/data/ccsi/proj-shared/E3SM/inputdata</DIN_LOC_ROOT>
-    <DIN_LOC_ROOT_CLMFORC>/nfs/data/ccsi/proj-shared/E3SM/inputdata/atm/datm7</DIN_LOC_ROOT_CLMFORC>
+    <CIME_OUTPUT_ROOT>/lustre/or-scratch/cades-ccsi/scratch/$USER</CIME_OUTPUT_ROOT>
+    <DIN_LOC_ROOT>/lustre/or-scratch/cades-ccsi/proj-shared/project_acme/e3sm_inputdata</DIN_LOC_ROOT>
+    <DIN_LOC_ROOT_CLMFORC>/lustre/or-scratch/cades-ccsi/proj-shared/project_acme/e3sm_inputdata/atm/datm7</DIN_LOC_ROOT_CLMFORC>
     <DOUT_S_ROOT>$CIME_OUTPUT_ROOT/archive/$CASE</DOUT_S_ROOT>
-    <BASELINE_ROOT>/lustre/or-hydra/cades-ccsi/proj-shared/project_acme/baselines/$COMPILER</BASELINE_ROOT>
-    <CCSM_CPRNC>/lustre/or-hydra/cades-ccsi/proj-shared/tools/cprnc.orcondo</CCSM_CPRNC>
+    <BASELINE_ROOT>/lustre/or-scratch/cades-ccsi/proj-shared/project_acme/baselines/$COMPILER</BASELINE_ROOT>
+    <CCSM_CPRNC>/lustre/or-scratch/cades-ccsi/proj-shared/tools/cprnc.orcondo</CCSM_CPRNC>
     <GMAKE_J>4</GMAKE_J>
     <TESTS>e3sm_developer</TESTS>
     <BATCH_SYSTEM>slurm</BATCH_SYSTEM>
-    <SUPPORTED_BY>yinj -at- ornl.gov</SUPPORTED_BY>
+    <SUPPORTED_BY>yuanf -at- ornl.gov</SUPPORTED_BY>
     <MAX_TASKS_PER_NODE>32</MAX_TASKS_PER_NODE>
     <MAX_MPITASKS_PER_NODE>32</MAX_MPITASKS_PER_NODE>
     <PROJECT_REQUIRED>FALSE</PROJECT_REQUIRED>
@@ -4180,52 +4180,44 @@
       <modules>
         <command name="purge"/>
       </modules>
-      <modules compiler="gnu">
+      <modules compiler="gnu" mpilib="mpi-serial">
         <command name="load">PE-gnu</command>
+        <command name="load">perl</command>
+        <command name="load">mkl/2018.1.163</command>
+        <command name="load">cmake/3.20.3</command>
+        <command name="load">python/3.6.3</command>
+        <command name="load">netcdf/4.3.3.1</command>
       </modules>
-      <modules>
-        <command name="load">mkl/2017</command>
-        <command name="load">cmake/3.18.4</command>
-        <command name="load">python/2.7.12</command>
-        <command name="load">nco/4.6.9</command>
+      <modules compiler="gnu" mpilib="openmpi">
+        <command name="load">PE-gnu</command>
+        <command name="load">perl</command>
+        <command name="load">mkl/2018.1.163</command>
+        <command name="load">cmake/3.20.3</command>
+        <command name="load">python/3.6.3</command>
         <command name="load">hdf5-parallel/1.8.17</command>
         <command name="load">netcdf-hdf5parallel/4.3.3.1</command>
-        <command name="load">pnetcdf/1.9.0</command>
       </modules>
     </module_system>
-
-    <!-- customize these fields as appropriate for your system (max tasks) and
-                            desired layout (change '${group}/${USER}' to your
-      prefered location). -->
     <RUNDIR>$CIME_OUTPUT_ROOT/$CASE/run</RUNDIR>
-    <EXEROOT>$HOME/cases/$CASE/bld</EXEROOT>
-
-    <!--
-         hack for PFLOTRAN coupling to build ELM model.
-         this is a temporary solution, and user must manually edit the following after cloning codes.
-         By default, model will build as PFLOTRAN coupled and run as non-coupled.
-    -->
-    <environment_variables>
-      <env name="PERL5LIB">/software/user_tools/current/cades-ccsi/perl5/lib/perl5/</env>
-        <!-- for CLM-PFLOTRAN coupling, the $PETSC_DIR and $CLM_PFLOTRAN_SOURCE_DIR must be user-defined specifically upon machines, e.g. in .bashrc -->
-        <!-- (NOTE: on CADES, PETSc built with mkl libraries, $MKLROOT_INC with '-I' and $MKLROOT_LIB with '-L') -->
-        <!-- pflotran codes are pre-built as libpflotran.a in $CLM_PFLOTRAN_SOURCE_DIR -->
-      <!-- for CLM-PFLOTRAN coupling, the $PETSC_DIR and $CLM_PFLOTRAN_SOURCE_DIR must be user-defined specifically upon machines, e.g. in .bashrc -->
-      <!-- pflotran codes are pre-built as libpflotran.a in $CLM_PFLOTRAN_SOURCE_DIR -->
-      <!-- AND, setting 'CLM_USE_PETSC' value to 'TRUE' in 'env_build.xml' to append PETSc includes and Libraries,
-                otherwise,explicitly appending  ' -I$ENV{PETSC_DIR}/include $ENV{MKLROOT_INC}' in 'PFLOTRAN_INC' and
-                 ' -L$ENV{PETSC_DIR}/lib -lpetsc -lparmetis -lmetis $ENV{MKLROOT_LIB} -lmkl_intel_lp64 -lmkl_core -lmkl_sequential' in 'PFLOTTRAN_LIB' -->
-        <env name="PETSC_PATH">/software/user_tools/current/cades-ccsi/petsc-x/openmpi-1.10-gcc-5.3</env>
-        <env name="PETSC_ARCH"></env> <!-- this is needed for cmake list of CLM_USE_PETSC, default by 'null' if installed PETSc rather than Built only -->
-        <env name="PFLOTRAN_INC"> -I$ENV{CLM_PFLOTRAN_SOURCE_DIR} -I$ENV{PETSC_PATH}/include</env>
-        <!-- 2021-01-28: PETSc libraries rebuilt as shared libraries on CADES, so need to set '-Wl,-rpath,', otherwise may cause issue of no libraries found when submit job -->
-        <env name="PFLOTRAN_LIB"> -L$ENV{CLM_PFLOTRAN_SOURCE_DIR} -lpflotran -L$ENV{PETSC_PATH}/lib -lpetsc -Wl,-rpath,$ENV{PETSC_PATH}/lib </env>
-      <env name="PERL5LIB">/software/user_tools/current/cades-ccsi/perl5/lib/perl5/</env>
-      <env name="NETCDF_PATH">/software/dev_tools/swtree/cs400_centos7.2_pe2016-08/netcdf-hdf5parallel/4.3.3.1/centos7.2_gnu5.3.0</env>
-      <env name="PNETCDF_PATH">/software/dev_tools/swtree/cs400_centos7.2_pe2016-08/pnetcdf/1.9.0/centos7.2_gnu5.3.0</env>
-      <env name="LAPACK_ROOT">/software/tools/compilers/intel_2017/mkl/lib/intel64</env>
+    <EXEROOT>$CIME_OUTPUT_ROOT/$CASE/bld</EXEROOT>
+    <environment_variables compiler="gnu" mpilib="openmpi">
+      <env name="PETSC_PATH">/software/user_tools/current/cades-ccsi/petsc-x/openmpi-1.10-gcc-5.3</env>
     </environment_variables>
-
+    <environment_variables compiler="gnu" mpilib="!mpi-serial">
+      <env name="HDF5_PATH">$ENV{HDF5_PATH}</env>
+      <env name="NETCDF_PATH">$ENV{NETCDF_PATH}</env>
+      <env name="NETCDF_C_PATH">$ENV{NETCDF_PATH}</env>
+      <env name="NETCDF_FORTRAN_PATH">$ENV{NETCDF_PATH}</env>
+      <env name="LAPACK_LIBDIR">$ENV{BLASLAPACK_LIBDIR}</env>
+      <env name="PERL5LIB">/software/dev_tools/swtree/cs400_centos7.2_pe2016-08/perl/5.30.1/centos7.2_gnu5.3.0/lib/perl5/</env>
+    </environment_variables>
+    <environment_variables compiler="gnu" mpilib="mpi-serial">
+      <env name="NETCDF_PATH">/software/dev_tools/swtree/cs400/netcdf/4.3.3.1/centos7.2_gnu5.3.0/</env>
+      <env name="NETCDF_C_PATH">/software/dev_tools/swtree/cs400/netcdf/4.3.3.1/centos7.2_gnu5.3.0/</env>
+      <env name="NETCDF_FORTRAN_PATH">/software/dev_tools/swtree/cs400/netcdf/4.3.3.1/centos7.2_gnu5.3.0/</env>
+      <env name="LAPACK_LIBDIR">$ENV{BLASLAPACK_LIBDIR}</env>
+      <env name="PERL5LIB">/software/dev_tools/swtree/cs400_centos7.2_pe2016-08/perl/5.30.1/centos7.2_gnu5.3.0/lib/perl5/</env>
+    </environment_variables>
   </machine>
 
   <machine MACH="chicoma-cpu">
