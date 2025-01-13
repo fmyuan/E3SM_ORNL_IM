@@ -239,6 +239,8 @@ contains
             atm2lnd_vars%metsource = 4
           else if (index(metdata_type,'cpl') .gt. 0) then 
             atm2lnd_vars%metsource = 5
+          else if (index(metdata_type,'era5') .gt. 0) then
+            atm2lnd_vars%metsource = 7
           else
             call endrun( sub//' ERROR: Invalid met data source for cpl_bypass' )
           end if
@@ -313,6 +315,9 @@ contains
           else if (atm2lnd_vars%metsource == 6) then
             ! CRUJAR v2.3
             atm2lnd_vars%endyear_met_trans  = 2021
+          else if (atm2lnd_vars%metsource == 7) then
+            atm2lnd_vars%startyear_met      = 1940
+            atm2lnd_vars%endyear_met_trans  = 2023
           end if
 
           if (use_livneh) then 
@@ -426,6 +431,11 @@ contains
             else if (atm2lnd_vars%metsource == 6) then
               ! CRUJAR v2.3
                 metdata_fname = 'CRUJRAV2.3.c2023.0.5x0.5_' // trim(metvars(v)) // '_1901-2021_z' // zst(2:3) // '.nc'
+            else if (atm2lnd_vars%metsource == 7) then
+                metdata_fname = 'ERA5_' // trim(metvars(v)) // '_1901-2023_z' // zst(2:3) // '.nc'
+                if (use_daymet) then
+                    metdata_fname = 'Daymet_ERA5.1km_' // trim(metvars(v)) // '_1980-2023_z' // zst(2:3) // '.nc'
+                end if
             end if
   
             ierr = nf90_open(trim(metdata_bypass) // '/' // trim(metdata_fname), NF90_NOWRITE, met_ncids(v))
